@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 const ThreeScene: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -7,8 +8,9 @@ const ThreeScene: React.FC = () => {
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
   const renderer = new THREE.WebGLRenderer();
   const geometry = new THREE.BoxGeometry();
-  const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-  const cube = new THREE.Mesh(geometry, material);
+  const meshMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+  const cube = new THREE.Mesh(geometry, meshMaterial);
+
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -18,29 +20,20 @@ const ThreeScene: React.FC = () => {
 
       scene.add(cube);
 
-      // Render the scene and camera
-      renderer.render(scene, camera);
+      const controls = new OrbitControls(camera, renderer.domElement);
 
-      // Call the renderScene function to start the animation loop
-      renderScene();
+      animate();
+
+      controls.addEventListener('change', () => renderer.render(scene, camera));
+
 
       window.addEventListener('resize', handleResize);
-
       // Clean up the event listener when the component is unmounted
       return () => {
         window.removeEventListener('resize', handleResize);
       };
     }
-
-
   }, []);
-
-  const renderScene = () => {
-    cube.rotation.x += 0.01;
-    cube.rotation.y += 0.01;
-    renderer.render(scene, camera);
-    requestAnimationFrame(renderScene);
-  };
 
   const handleResize = () => {
     const width = window.innerWidth;
@@ -52,6 +45,13 @@ const ThreeScene: React.FC = () => {
     renderer.setSize(width, height);
   };
 
-  return <div ref={containerRef} />;
+  const animate = () => {
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+  };
+
+  return (
+    <div ref={containerRef} />
+  );
 };
 export default ThreeScene;
