@@ -7,10 +7,15 @@ const ThreeScene: React.FC = () => {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
   const renderer = new THREE.WebGLRenderer({ antialias: true });
-  const geometry = new THREE.SphereGeometry();
-  const texture = new THREE.TextureLoader().load("earth.jpg");
-  const meshMaterial = new THREE.MeshStandardMaterial({ map: texture });
-  const planet = new THREE.Mesh(geometry, meshMaterial);
+  const geometry = new THREE.SphereGeometry(1, 32, 32);
+  const earthTexture = new THREE.TextureLoader().load("earth.jpg");
+  const earthCloudsTexture = new THREE.TextureLoader().load("earth-clouds.png");
+  const materialEarth = new THREE.MeshStandardMaterial({ map: earthTexture, depthTest: false });
+  const materialClouds = new THREE.MeshStandardMaterial({ map: earthCloudsTexture, transparent: true, depthTest: false });
+  const earthMesh = new THREE.Mesh(geometry, materialEarth);
+  earthMesh.renderOrder = 0;
+  const earthCloudsMesh = new THREE.Mesh(geometry, materialClouds);
+  earthCloudsMesh.renderOrder = 1;
   const controls = new OrbitControls(camera, renderer.domElement);
   const dirLight = new THREE.DirectionalLight(0xffffff, 1.8);
   const ambientLight = new THREE.AmbientLight(0x404040);
@@ -32,19 +37,29 @@ const ThreeScene: React.FC = () => {
       controls.minPolarAngle = Math.PI / 2;
       controls.maxPolarAngle = Math.PI / 2;
 
+      //Lock camera distance
+      // controls.minDistance = 5;
+      // controls.maxDistance = 5;
+
       // Planet inclination
-      planet.rotation.x = 0.23;
+      earthMesh.rotation.x = 0.23;
+      earthCloudsMesh.rotation.x = 0.23;
 
       // Enable shadows
-      planet.castShadow = true;
-      planet.receiveShadow = true;
+      earthMesh.castShadow = true;
+      earthCloudsMesh.castShadow = true;
+      earthMesh.receiveShadow = true;
+      earthCloudsMesh.receiveShadow = true;
       dirLight.castShadow = true;
 
       // Add light
       dirLight.position.set(50, 0, 30);
+
+      //Add objects to scene
       scene.add(dirLight);
       scene.add(ambientLight);
-      scene.add(planet);
+      scene.add(earthMesh);
+      scene.add(earthCloudsMesh);
 
       animate();
 
@@ -67,7 +82,8 @@ const ThreeScene: React.FC = () => {
   };
 
   const animate = () => {
-    planet.rotation.y += 0.001;
+    earthMesh.rotation.y += 0.001;
+    earthCloudsMesh.rotation.y += 0.002;
     requestAnimationFrame(animate);
     renderer.render(scene, camera);
     controls.update();
