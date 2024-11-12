@@ -25,9 +25,9 @@ const ThreeScene: React.FC = () => {
   const materialAtmosphere = new THREE.MeshStandardMaterial({ color: 0x00b3ff, emissive: 0x00b3ff, transparent: true, opacity: 0.1 });
   const materialEarthRing = new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: false });
   const materialStars = new THREE.MeshBasicMaterial({ map: starsTexture, side: THREE.BackSide });
-  const materialNode1 = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: false, depthTest: true });
-  const materialNode2 = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: false, depthTest: true });
-  const materialNode3 = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: false, depthTest: true });
+  const materialNode1 = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: false });
+  const materialNode2 = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: false });
+  const materialNode3 = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: false });
 
   const earthMesh = new THREE.Mesh(planetGeometry, materialEarth);
   const earthCloudsMesh = new THREE.Mesh(planetGeometry, materialClouds);
@@ -103,6 +103,9 @@ const ThreeScene: React.FC = () => {
       earthMesh.receiveShadow = true;
       earthCloudsMesh.receiveShadow = true;
       earthRingMesh.receiveShadow = true;
+      node1Mesh.receiveShadow = true;
+      node2Mesh.receiveShadow = true;
+      node3Mesh.receiveShadow = true;
       dirLight.castShadow = true;
 
       // Add light
@@ -116,7 +119,6 @@ const ThreeScene: React.FC = () => {
       node1Mesh.name = 'node1';
       node2Mesh.name = 'node2';
       node3Mesh.name = 'node3';
-      // nodesMesh.name = 'nodes';
 
       //Add objects to scene
       scene.add(dirLight);
@@ -160,7 +162,9 @@ const ThreeScene: React.FC = () => {
         raycaster.setFromCamera(mouse, camera);
         const intersects = raycaster.intersectObjects(scene.children);
         if (intersects.length > 0) {
-          console.log(intersects[0].object.name);
+          if (intersects[0].object.name === 'node1') {
+            console.log('Node 1 clicked');
+          }
         }
       });
 
@@ -194,6 +198,7 @@ const ThreeScene: React.FC = () => {
         earthRingMesh.material.color.setHex(color);
         break;
       //TODO: Refacto to use dynamic names instead of having 3 cases
+      //TODO: Add progressive emissive color using the distance between the mouse and the node
       case 'node1':
         node1Mesh.material.color.setHex(color);
         node1Mesh.material.emissive.setHex(color);
@@ -221,7 +226,6 @@ const ThreeScene: React.FC = () => {
     node1Mesh.rotation.z += 0.0005;
     node2Mesh.rotation.z += 0.0005;
     node3Mesh.rotation.z += 0.0005;
-    // nodesMesh.rotation.z += 0.0005;
     requestAnimationFrame(animate);
     renderer.render(scene, camera);
     controls.update();
