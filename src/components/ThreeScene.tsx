@@ -1,6 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 
 
 const ThreeScene: React.FC = () => {
@@ -13,9 +16,9 @@ const ThreeScene: React.FC = () => {
   const planetAtmosphereGeometry = new THREE.SphereGeometry(1.01, 64, 64);
   const planetRingGeometry = new THREE.TorusGeometry(2, 0.01, 10, 128);
   const starBackgroundGeometry = new THREE.SphereGeometry(90, 128, 128);
-  const node1 = new THREE.SphereGeometry(0.1, 32, 32).translate(2 * Math.cos(planetRingGeometry.parameters.arc / 3), 2 * Math.sin(planetRingGeometry.parameters.arc / 3), 0);
-  const node2 = new THREE.SphereGeometry(0.1, 32, 32).translate(2 * Math.cos(planetRingGeometry.parameters.arc / 3 * 2), 2 * Math.sin(planetRingGeometry.parameters.arc / 3 * 2), 0);
-  const node3 = new THREE.SphereGeometry(0.1, 32, 32).translate(2 * Math.cos(planetRingGeometry.parameters.arc / 3 * 3), 2 * Math.sin(planetRingGeometry.parameters.arc / 3 * 3), 0);
+  const node1Geometry = new THREE.SphereGeometry(0.1, 32, 32).translate(2 * Math.cos(planetRingGeometry.parameters.arc / 3), 2 * Math.sin(planetRingGeometry.parameters.arc / 3), 0);
+  const node2Geometry = new THREE.SphereGeometry(0.1, 32, 32).translate(2 * Math.cos(planetRingGeometry.parameters.arc / 3 * 2), 2 * Math.sin(planetRingGeometry.parameters.arc / 3 * 2), 0);
+  const node3Geometry = new THREE.SphereGeometry(0.1, 32, 32).translate(2 * Math.cos(planetRingGeometry.parameters.arc / 3 * 3), 2 * Math.sin(planetRingGeometry.parameters.arc / 3 * 3), 0);
 
   const earthTexture = new THREE.TextureLoader().load("earth.jpg");
   const earthCloudsTexture = new THREE.TextureLoader().load("earth-clouds.png");
@@ -33,9 +36,9 @@ const ThreeScene: React.FC = () => {
   const earthCloudsMesh = new THREE.Mesh(planetGeometry, materialClouds);
   const earthAtmosphereMesh = new THREE.Mesh(planetAtmosphereGeometry, materialAtmosphere);
   const earthRingMesh = new THREE.Mesh(planetRingGeometry, materialEarthRing);
-  const node1Mesh = new THREE.Mesh(node1, materialNode1);
-  const node2Mesh = new THREE.Mesh(node2, materialNode2);
-  const node3Mesh = new THREE.Mesh(node3, materialNode3);
+  const node1Mesh = new THREE.Mesh(node1Geometry, materialNode1);
+  const node2Mesh = new THREE.Mesh(node2Geometry, materialNode2);
+  const node3Mesh = new THREE.Mesh(node3Geometry, materialNode3);
   const starBackgroundMesh = new THREE.Mesh(starBackgroundGeometry, materialStars);
 
   const controls = new OrbitControls(camera, renderer.domElement);
@@ -44,6 +47,121 @@ const ThreeScene: React.FC = () => {
 
   const dirLight = new THREE.DirectionalLight(0xffffff, 1.8);
   const ambientLight = new THREE.AmbientLight(0x404040);
+
+  const titre = 'Hello !';
+  const content1 = 'Je m\'appelle Hugo';
+  const content2 = 'Je suis passionné par...';
+  const arrayOfTexts = ['Le développement web !', 'L\'espace !', 'Les petits chats !', 'Nicolas MAERTEN !'];
+
+  let textMesh: THREE.Mesh | undefined;
+
+  const handleResize = React.useCallback(() => {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(width, height);
+  }, [camera, renderer]);
+
+  const updateMeshHoverEmissiveColor = React.useCallback((meshName: string, emissive: boolean, color: number) => {
+    switch (meshName) {
+      case 'earthAtmosphere':
+        earthAtmosphereMesh.material.color.setHex(color);
+        earthAtmosphereMesh.material.emissive.setHex(color);
+        earthAtmosphereMesh.material.emissive = emissive ? new THREE.Color(0x00b3ff) : new THREE.Color(0x000000);
+        break;
+      case 'earthRing':
+        //TODO: Add emissive gradient (maybe) ?
+        earthRingMesh.material.color.setHex(color);
+        break;
+      //TODO: Refacto to use dynamic names instead of having 3 cases
+      //TODO: Add progressive emissive color using the distance between the mouse and the node
+      case 'node1':
+        node1Mesh.material.color.setHex(color);
+        node1Mesh.material.emissive.setHex(color);
+        node1Mesh.material.emissive = emissive ? new THREE.Color(0xffffff) : new THREE.Color(0x000000);
+        break;
+      case 'node2':
+        node2Mesh.material.color.setHex(color);
+        node2Mesh.material.emissive.setHex(color);
+        node2Mesh.material.emissive = emissive ? new THREE.Color(0xffffff) : new THREE.Color(0x000000);
+        break;
+      case 'node3':
+        node3Mesh.material.color.setHex(color);
+        node3Mesh.material.emissive.setHex(color);
+        node3Mesh.material.emissive = emissive ? new THREE.Color(0xffffff) : new THREE.Color(0x000000);
+        break;
+      default:
+        break;
+    }
+  }, [earthAtmosphereMesh.material, earthRingMesh.material.color, node1Mesh.material, node2Mesh.material, node3Mesh.material]);
+
+
+  const animate = React.useCallback(() => {
+    earthMesh.rotation.y += 0.001;
+    earthCloudsMesh.rotation.y += 0.0017;
+    //TODO: Refacto to use dynamic names instead of calling 3 nodes
+    node1Mesh.rotation.z += 0.0005;
+    node2Mesh.rotation.z += 0.0005;
+    node3Mesh.rotation.z += 0.0005;
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+  }, [camera, controls, earthCloudsMesh.rotation, earthMesh.rotation, node1Mesh.rotation, node2Mesh.rotation, node3Mesh.rotation, renderer, scene]);
+
+  const createTextGeometry = async () => {
+    const loader = new FontLoader();
+    const font = await loader.loadAsync('fonts/montserrat_thin_regular.json');
+
+    const titleTextGeometry = new TextGeometry(titre, {
+      font: font,
+      size: 0.22,
+      depth: 0.01,
+      bevelSize: 0.01,
+      bevelThickness: 0.01,
+      bevelEnabled: true,
+    });
+
+    const contentTextGeometry = new TextGeometry(content1,
+      {
+        font: font,
+        size: 0.15,
+        depth: 0.01,
+        bevelSize: 0.005,
+        bevelThickness: 0.005,
+        bevelEnabled: true,
+      }
+    );
+
+    const contentTextGeometry2 = new TextGeometry(content2,
+      {
+        font: font,
+        size: 0.15,
+        depth: 0.01,
+        bevelSize: 0.005,
+        bevelThickness: 0.005,
+        bevelEnabled: true,
+      }
+    );
+
+    // Put the content below the title
+    contentTextGeometry.translate(0, -0.3, 0);
+    contentTextGeometry2.translate(0, -0.5, 0);
+
+    const textGeometry = BufferGeometryUtils.mergeGeometries([titleTextGeometry, contentTextGeometry, contentTextGeometry2]);
+
+    return textGeometry;
+  }
+  createTextGeometry().then((textGeometry) => {
+    textMesh = new THREE.Mesh(textGeometry, new THREE.MeshStandardMaterial({ color: 0xffffff }));
+    textMesh.position.set(0, 0, 1.1);
+    textMesh.visible = false;
+    textMesh.geometry.center();
+    scene.add(textMesh);
+  });
+
 
 
   useEffect(() => {
@@ -162,8 +280,12 @@ const ThreeScene: React.FC = () => {
         raycaster.setFromCamera(mouse, camera);
         const intersects = raycaster.intersectObjects(scene.children);
         if (intersects.length > 0) {
-          if (intersects[0].object.name === 'node1') {
-            console.log('Node 1 clicked');
+          if (intersects[0].object.name === 'earthAtmosphere') {
+            if (textMesh) {
+              textMesh.visible = true;
+            } else {
+              console.log('textMesh is not defined yet');
+            }
           }
         }
       });
@@ -174,62 +296,7 @@ const ThreeScene: React.FC = () => {
         window.removeEventListener('resize', handleResize);
       };
     }
-  }, []);
-
-  const handleResize = () => {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-
-    renderer.setSize(width, height);
-  };
-
-  const updateMeshHoverEmissiveColor = (meshName: string, emissive: boolean, color: number) => {
-    switch (meshName) {
-      case 'earthAtmosphere':
-        earthAtmosphereMesh.material.color.setHex(color);
-        earthAtmosphereMesh.material.emissive.setHex(color);
-        earthAtmosphereMesh.material.emissive = emissive ? new THREE.Color(0x00b3ff) : new THREE.Color(0x000000);
-        break;
-      case 'earthRing':
-        //TODO: Add emissive gradient (maybe) ?
-        earthRingMesh.material.color.setHex(color);
-        break;
-      //TODO: Refacto to use dynamic names instead of having 3 cases
-      //TODO: Add progressive emissive color using the distance between the mouse and the node
-      case 'node1':
-        node1Mesh.material.color.setHex(color);
-        node1Mesh.material.emissive.setHex(color);
-        node1Mesh.material.emissive = emissive ? new THREE.Color(0xffffff) : new THREE.Color(0x000000);
-        break;
-      case 'node2':
-        node2Mesh.material.color.setHex(color);
-        node2Mesh.material.emissive.setHex(color);
-        node2Mesh.material.emissive = emissive ? new THREE.Color(0xffffff) : new THREE.Color(0x000000);
-        break;
-      case 'node3':
-        node3Mesh.material.color.setHex(color);
-        node3Mesh.material.emissive.setHex(color);
-        node3Mesh.material.emissive = emissive ? new THREE.Color(0xffffff) : new THREE.Color(0x000000);
-        break;
-      default:
-        break;
-    }
-  };
-
-  const animate = () => {
-    earthMesh.rotation.y += 0.001;
-    earthCloudsMesh.rotation.y += 0.0017;
-    //TODO: Refacto to use dynamic names instead of calling 3 nodes
-    node1Mesh.rotation.z += 0.0005;
-    node2Mesh.rotation.z += 0.0005;
-    node3Mesh.rotation.z += 0.0005;
-    requestAnimationFrame(animate);
-    renderer.render(scene, camera);
-    controls.update();
-  };
+  }, [renderer, scene, camera, controls, earthMesh, earthCloudsMesh, earthAtmosphereMesh, earthRingMesh, node1Mesh, node2Mesh, node3Mesh, starBackgroundMesh, dirLight, ambientLight, mouse, raycaster, textMesh, handleResize, animate, updateMeshHoverEmissiveColor]);
 
   return (
     <div ref={containerRef} />
