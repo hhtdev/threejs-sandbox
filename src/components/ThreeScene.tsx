@@ -23,12 +23,15 @@ const ThreeScene: React.FC = () => {
   const earthTexture = new THREE.TextureLoader().load("earth.jpg");
   const earthCloudsTexture = new THREE.TextureLoader().load("earth-clouds.png");
   const starsTexture = new THREE.TextureLoader().load("8k-stars-milky-way.jpg");
+  const linkedInTexture = new THREE.TextureLoader().load("linkedin-logo.webp");
   const materialEarth = new THREE.MeshStandardMaterial({ map: earthTexture, depthTest: true });
   const materialClouds = new THREE.MeshStandardMaterial({ map: earthCloudsTexture, transparent: true, depthTest: false });
   const materialAtmosphere = new THREE.MeshStandardMaterial({ color: 0x00b3ff, emissive: 0x00b3ff, transparent: true, opacity: 0.1 });
   const materialEarthRing = new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: false });
   const materialStars = new THREE.MeshBasicMaterial({ map: starsTexture, side: THREE.BackSide });
-  const materialNode1 = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: false });
+
+  const materialNode1 = new THREE.MeshStandardMaterial({ map: linkedInTexture, depthTest: true });
+  //const materialNode1 = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: false });
   const materialNode2 = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: false });
   const materialNode3 = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: false });
 
@@ -50,7 +53,7 @@ const ThreeScene: React.FC = () => {
 
   const titre = 'Hello !';
   const content1 = 'Je m\'appelle Hugo';
-  const content2 = 'Je suis développeur web !';
+  const content2 = 'Développeur web';
   const content3 = 'Contactez moi !';
   const arrayOfTexts = ['Le développement web !', 'L\'espace !', 'Les petits chats !', 'Nicolas MAERTEN !'];
 
@@ -169,7 +172,8 @@ const ThreeScene: React.FC = () => {
   }
   createTextGeometry().then((textGeometry) => {
     textMesh = new THREE.Mesh(textGeometry, new THREE.MeshStandardMaterial({ color: 0xffffff }));
-    textMesh.position.set(0, 0, 1.1);
+    textMesh.position.set(0, 0, 0.9);
+    textMesh.rotateOnAxis(new THREE.Vector3(0, -1, 0), Math.PI / 1.42);
     textMesh.visible = true;
     textMesh.geometry.center();
     scene.add(textMesh);
@@ -186,6 +190,7 @@ const ThreeScene: React.FC = () => {
       pos.setXYZ(i, Math.cos(angle) * finalR, pos.getY(i), Math.sin(-angle) * finalR);
     }
     g.computeVertexNormals();
+    return g;
   }
 
 
@@ -198,6 +203,7 @@ const ThreeScene: React.FC = () => {
 
       // Camera distance from planet
       camera.position.z = 5;
+      camera.position.x = -1;
 
       // Add inertia
       controls.enableDamping = true;
