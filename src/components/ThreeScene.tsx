@@ -51,7 +51,7 @@ const ThreeScene: React.FC = () => {
   const titre = 'Hello !';
   const content1 = 'Je m\'appelle Hugo';
   const content2 = 'Je suis passionné par...';
-  const arrayOfTexts = ['Le développement web !', 'L\'espace !', 'Les petits chats !', 'Nicolas MAERTEN !'];
+  const arrayOfTexts = ['Le développement web !', 'L\'espace !', 'Les petits chats !', 'L\'ingénierie !', 'plus d\'idées !'];
 
   let textMesh: THREE.Mesh | undefined;
 
@@ -151,17 +151,63 @@ const ThreeScene: React.FC = () => {
     contentTextGeometry2.translate(0, -0.5, 0);
 
     const textGeometry = BufferGeometryUtils.mergeGeometries([titleTextGeometry, contentTextGeometry, contentTextGeometry2]);
+    textGeometry.center();
+    return bend(textGeometry);
+  };
 
-    return textGeometry;
-  }
   createTextGeometry().then((textGeometry) => {
     textMesh = new THREE.Mesh(textGeometry, new THREE.MeshStandardMaterial({ color: 0xffffff }));
     textMesh.position.set(0, 0, 1.1);
-    textMesh.visible = false;
+    textMesh.rotateOnAxis(new THREE.Vector3(0, -1, 0), Math.PI / 2);
+    textMesh.visible = true;
     textMesh.geometry.center();
     scene.add(textMesh);
   });
 
+  const createCylinderWithText = async () => {
+
+    const loader = new FontLoader();
+    const font = await loader.loadAsync('fonts/montserrat_thin_regular.json');
+
+    const arrayOfTextsGeometry = arrayOfTexts.map((text, index) => {
+      const textGeometry = new TextGeometry(text, {
+        font: font,
+        size: 0.1,
+        depth: 0.01,
+        bevelSize: 0.005,
+        bevelThickness: 0.005,
+        bevelEnabled: true,
+      });
+      textGeometry.center();
+      //Put the text one after the other on the x-axis cnsidering the text has to be aligned to the left
+      textGeometry.translate(index * 2, 0, 0);
+      return textGeometry;
+    });
+
+    const arrayOfTextsGeometriesMerged = bend(BufferGeometryUtils.mergeGeometries(arrayOfTextsGeometry));
+
+    const arrayOfTextMesh = new THREE.Mesh(arrayOfTextsGeometriesMerged, new THREE.MeshStandardMaterial({ color: 0xffffff }));
+
+    arrayOfTextMesh.rotateOnAxis(new THREE.Vector3(0, -1, 0), Math.PI / 2);
+
+    scene.add(arrayOfTextMesh);
+
+  };
+
+  createCylinderWithText();
+
+  const bend = (g: THREE.BufferGeometry) => {
+    const pos = g.attributes.position;
+    const z = 1.25; // Distance from the center of the planet
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i);
+      const aspect = x / 10;
+      const angle = Math.PI * 2 * aspect;
+      pos.setXYZ(i, Math.cos(angle) * z, pos.getY(i), Math.sin(-angle) * z);
+    }
+    g.computeVertexNormals(); // Recalculate normals for the lighting
+    return g;
+  }
 
 
   useEffect(() => {
@@ -278,16 +324,16 @@ const ThreeScene: React.FC = () => {
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects(scene.children);
-        if (intersects.length > 0) {
-          if (intersects[0].object.name === 'earthAtmosphere') {
-            if (textMesh) {
-              textMesh.visible = true;
-            } else {
-              console.log('textMesh is not defined yet');
-            }
-          }
-        }
+        //const intersects = raycaster.intersectObjects(scene.children);
+        // if (intersects.length > 0) {
+        //   if (intersects[0].object.name === 'earthAtmosphere') {
+        //     if (textMesh) {
+        //       textMesh.visible = true;
+        //     } else {
+        //       console.log('textMesh is not defined yet');
+        //     }
+        //   }
+        // }
       });
 
       window.addEventListener('resize', handleResize);
