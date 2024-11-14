@@ -50,7 +50,8 @@ const ThreeScene: React.FC = () => {
 
   const titre = 'Hello !';
   const content1 = 'Je m\'appelle Hugo';
-  const content2 = 'Je suis passionné par...';
+  const content2 = 'Je suis développeur web !';
+  const content3 = 'Contactez moi !';
   const arrayOfTexts = ['Le développement web !', 'L\'espace !', 'Les petits chats !', 'Nicolas MAERTEN !'];
 
   let textMesh: THREE.Mesh | undefined;
@@ -146,21 +147,46 @@ const ThreeScene: React.FC = () => {
       }
     );
 
+    const contentTextGeometry3 = new TextGeometry(content3,
+      {
+        font: font,
+        size: 0.15,
+        depth: 0.01,
+        bevelSize: 0.005,
+        bevelThickness: 0.005,
+        bevelEnabled: true,
+      }
+    );
+
     // Put the content below the title
     contentTextGeometry.translate(0, -0.3, 0);
-    contentTextGeometry2.translate(0, -0.5, 0);
+    contentTextGeometry2.translate(0, -0.6, 0);
+    contentTextGeometry3.translate(0, -0.9, 0);
 
-    const textGeometry = BufferGeometryUtils.mergeGeometries([titleTextGeometry, contentTextGeometry, contentTextGeometry2]);
-
-    return textGeometry;
+    const textGeometry = BufferGeometryUtils.mergeGeometries([titleTextGeometry, contentTextGeometry, contentTextGeometry2, contentTextGeometry3]);
+    //return textGeometry;
+    return bend(textGeometry);
   }
   createTextGeometry().then((textGeometry) => {
     textMesh = new THREE.Mesh(textGeometry, new THREE.MeshStandardMaterial({ color: 0xffffff }));
     textMesh.position.set(0, 0, 1.1);
-    textMesh.visible = false;
+    textMesh.visible = true;
     textMesh.geometry.center();
     scene.add(textMesh);
   });
+
+  const bend = (g: THREE.BufferGeometry) => {
+    const pos = g.attributes.position;
+    const r = 10 / (2 * Math.PI);
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i);
+      const aspect = x / 10;
+      const angle = Math.PI * 2 * aspect;
+      const finalR = r + pos.getZ(i);
+      pos.setXYZ(i, Math.cos(angle) * finalR, pos.getY(i), Math.sin(-angle) * finalR);
+    }
+    g.computeVertexNormals();
+  }
 
 
 
@@ -278,16 +304,16 @@ const ThreeScene: React.FC = () => {
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
-        const intersects = raycaster.intersectObjects(scene.children);
-        if (intersects.length > 0) {
-          if (intersects[0].object.name === 'earthAtmosphere') {
-            if (textMesh) {
-              textMesh.visible = true;
-            } else {
-              console.log('textMesh is not defined yet');
-            }
-          }
-        }
+        // const intersects = raycaster.intersectObjects(scene.children);
+        // if (intersects.length > 0) {
+        //   if (intersects[0].object.name === 'earthAtmosphere') {
+        //     if (textMesh) {
+        //       textMesh.visible = true;
+        //     } else {
+        //       console.log('textMesh is not defined yet');
+        //     }
+        //   }
+        // }
       });
 
       window.addEventListener('resize', handleResize);
