@@ -14,35 +14,52 @@ const ThreeScene: React.FC = () => {
 
   const planetGeometry = new THREE.SphereGeometry(1, 64, 64);
   const planetAtmosphereGeometry = new THREE.SphereGeometry(1.01, 64, 64);
-  const planetRingGeometry = new THREE.TorusGeometry(2, 0.01, 10, 128);
   const starBackgroundGeometry = new THREE.SphereGeometry(90, 128, 128);
-  const node1Geometry = new THREE.SphereGeometry(0.1, 32, 32).translate(2 * Math.cos(planetRingGeometry.parameters.arc / 3), 2 * Math.sin(planetRingGeometry.parameters.arc / 3), 0);
-  const node2Geometry = new THREE.SphereGeometry(0.1, 32, 32).translate(2 * Math.cos(planetRingGeometry.parameters.arc / 3 * 2), 2 * Math.sin(planetRingGeometry.parameters.arc / 3 * 2), 0);
-  const node3Geometry = new THREE.SphereGeometry(0.1, 32, 32).translate(2 * Math.cos(planetRingGeometry.parameters.arc / 3 * 3), 2 * Math.sin(planetRingGeometry.parameters.arc / 3 * 3), 0);
+  const nodeBoxGeometry = new THREE.BoxGeometry(0.3, 0.3, 0.1);
+
 
   const earthTexture = new THREE.TextureLoader().load("earth.jpg");
   const earthCloudsTexture = new THREE.TextureLoader().load("earth-clouds.png");
   const starsTexture = new THREE.TextureLoader().load("8k-stars-milky-way.jpg");
-  const linkedInTexture = new THREE.TextureLoader().load("linkedin-logo.webp");
+  const linkedinInTexture = new THREE.TextureLoader().load("linkedin.png");
+  const githubTexture = new THREE.TextureLoader().load("github.png");
+  const gmailTexture = new THREE.TextureLoader().load("gmail.png");
   const materialEarth = new THREE.MeshStandardMaterial({ map: earthTexture, depthTest: true });
   const materialClouds = new THREE.MeshStandardMaterial({ map: earthCloudsTexture, transparent: true, depthTest: false });
   const materialAtmosphere = new THREE.MeshStandardMaterial({ color: 0x00b3ff, emissive: 0x00b3ff, transparent: true, opacity: 0.1 });
-  const materialEarthRing = new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: false });
   const materialStars = new THREE.MeshBasicMaterial({ map: starsTexture, side: THREE.BackSide });
-
-  const materialNode1 = new THREE.MeshStandardMaterial({ map: linkedInTexture, depthTest: true });
-  //const materialNode1 = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: false });
-  const materialNode2 = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: false });
-  const materialNode3 = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: false });
 
   const earthMesh = new THREE.Mesh(planetGeometry, materialEarth);
   const earthCloudsMesh = new THREE.Mesh(planetGeometry, materialClouds);
   const earthAtmosphereMesh = new THREE.Mesh(planetAtmosphereGeometry, materialAtmosphere);
-  const earthRingMesh = new THREE.Mesh(planetRingGeometry, materialEarthRing);
-  const node1Mesh = new THREE.Mesh(node1Geometry, materialNode1);
-  const node2Mesh = new THREE.Mesh(node2Geometry, materialNode2);
-  const node3Mesh = new THREE.Mesh(node3Geometry, materialNode3);
   const starBackgroundMesh = new THREE.Mesh(starBackgroundGeometry, materialStars);
+
+  const linkedinMesh = new THREE.Mesh(nodeBoxGeometry, new THREE.MeshStandardMaterial({ map: linkedinInTexture, transparent: true }));
+  linkedinMesh.scale.set(4, 4, 1); // Scale down the node
+  linkedinMesh.position.set(4, 0, 0); //Mesh starting position
+  const linkedinApogee = 5; // Radius along the X-axis (width)
+  const linkedinPerigee = 4;  // Radius along the Z-axis (height)
+  const linkedinverticalAmplitude = 0.3; // How high the object moves on the Y-axis
+  const linkedinverticalFrequency = 0.5; // How quickly the vertical motion oscillates
+  const linkedinTimeMultiplier = 0.5; // How quickly the object orbits around the planet
+
+  const githubMesh = new THREE.Mesh(nodeBoxGeometry, new THREE.MeshStandardMaterial({ map: githubTexture, transparent: true }));
+  githubMesh.scale.set(8, 8, 1);
+  githubMesh.position.set(15, 0, 0);
+  const githubApogee = 25;
+  const githubPerigee = 15;
+  const githubverticalAmplitude = 10;
+  const githubverticalFrequency = 0.5;
+  const githubTimeMultiplier = 0.9;
+
+  const gmailMesh = new THREE.Mesh(nodeBoxGeometry, new THREE.MeshStandardMaterial({ map: gmailTexture, transparent: true }));
+  gmailMesh.scale.set(3, 3, 1);
+  gmailMesh.position.set(2.2, 0, 0);
+  const gmailApogee = 8;
+  const gmailPerigee = 6;
+  const gmailverticalAmplitude = 2;
+  const gmailverticalFrequency = 0.5;
+  const gmailTimeMultiplier = 0.7;
 
   const controls = new OrbitControls(camera, renderer.domElement);
   const mouse = new THREE.Vector2();
@@ -51,11 +68,14 @@ const ThreeScene: React.FC = () => {
   const dirLight = new THREE.DirectionalLight(0xffffff, 1.8);
   const ambientLight = new THREE.AmbientLight(0x404040);
 
-  const titre = 'Hello !';
-  const content1 = 'Je m\'appelle Hugo';
-  const content2 = 'Développeur web';
-  const content3 = 'Contactez moi !';
-  const arrayOfTexts = ['Le développement web !', 'L\'espace !', 'Les petits chats !', 'Nicolas MAERTEN !'];
+  //TODO: Change this to something like :
+  /*
+    Hey ! Je m'appelle Hugo ! Je suis développeur web, passionné par l'espace, les défis techniques et les petits chats !
+  */
+  const titre = 'Hey !';
+  const content1 = 'fuck';
+  const content2 = 'c\'est dur Three.js';
+  const content3 = 'ALED !';
 
   let textMesh: THREE.Mesh | undefined;
 
@@ -76,44 +96,27 @@ const ThreeScene: React.FC = () => {
         earthAtmosphereMesh.material.emissive.setHex(color);
         earthAtmosphereMesh.material.emissive = emissive ? new THREE.Color(0x00b3ff) : new THREE.Color(0x000000);
         break;
-      case 'earthRing':
-        //TODO: Add emissive gradient (maybe) ?
-        earthRingMesh.material.color.setHex(color);
-        break;
       //TODO: Refacto to use dynamic names instead of having 3 cases
       //TODO: Add progressive emissive color using the distance between the mouse and the node
-      case 'node1':
-        node1Mesh.material.color.setHex(color);
-        node1Mesh.material.emissive.setHex(color);
-        node1Mesh.material.emissive = emissive ? new THREE.Color(0xffffff) : new THREE.Color(0x000000);
+      case 'linkedinNode':
+        linkedinMesh.material.color.setHex(color);
+        linkedinMesh.material.emissive.setHex(color);
+        linkedinMesh.material.emissive = emissive ? new THREE.Color(0xffffff) : new THREE.Color(0x000000);
         break;
-      case 'node2':
-        node2Mesh.material.color.setHex(color);
-        node2Mesh.material.emissive.setHex(color);
-        node2Mesh.material.emissive = emissive ? new THREE.Color(0xffffff) : new THREE.Color(0x000000);
+      case 'githubNode':
+        githubMesh.material.color.setHex(color);
+        githubMesh.material.emissive.setHex(color);
+        githubMesh.material.emissive = emissive ? new THREE.Color(0xffffff) : new THREE.Color(0x000000);
         break;
-      case 'node3':
-        node3Mesh.material.color.setHex(color);
-        node3Mesh.material.emissive.setHex(color);
-        node3Mesh.material.emissive = emissive ? new THREE.Color(0xffffff) : new THREE.Color(0x000000);
+      case 'gmailNode':
+        gmailMesh.material.color.setHex(color);
+        gmailMesh.material.emissive.setHex(color);
+        gmailMesh.material.emissive = emissive ? new THREE.Color(0xffffff) : new THREE.Color(0x000000);
         break;
       default:
         break;
     }
-  }, [earthAtmosphereMesh.material, earthRingMesh.material.color, node1Mesh.material, node2Mesh.material, node3Mesh.material]);
-
-
-  const animate = React.useCallback(() => {
-    earthMesh.rotation.y += 0.001;
-    earthCloudsMesh.rotation.y += 0.0017;
-    //TODO: Refacto to use dynamic names instead of calling 3 nodes
-    node1Mesh.rotation.z += 0.0005;
-    node2Mesh.rotation.z += 0.0005;
-    node3Mesh.rotation.z += 0.0005;
-    requestAnimationFrame(animate);
-    controls.update();
-    renderer.render(scene, camera);
-  }, [camera, controls, earthCloudsMesh.rotation, earthMesh.rotation, node1Mesh.rotation, node2Mesh.rotation, node3Mesh.rotation, renderer, scene]);
+  }, [earthAtmosphereMesh.material, linkedinMesh.material, githubMesh.material, gmailMesh.material]);
 
   const createTextGeometry = async () => {
     const loader = new FontLoader();
@@ -195,6 +198,35 @@ const ThreeScene: React.FC = () => {
 
 
 
+  const animate = React.useCallback(() => {
+    requestAnimationFrame(animate);
+    const time = Date.now() * 0.0005; // Elapsed time in seconds
+    earthMesh.rotation.y += 0.001;
+    earthCloudsMesh.rotation.y += 0.0017;
+    linkedinMesh.position.x = Math.cos(time * linkedinTimeMultiplier) * linkedinApogee; // Orbit around the Y axis
+    linkedinMesh.position.z = Math.sin(time * linkedinTimeMultiplier) * linkedinPerigee; // Orbit around the Y axis
+    linkedinMesh.position.y = Math.sin(time * linkedinverticalFrequency) * linkedinverticalAmplitude; // Vertical motion
+
+    githubMesh.position.x = Math.cos(time * githubTimeMultiplier) * githubApogee;
+    githubMesh.position.z = Math.sin(time * githubTimeMultiplier) * githubPerigee;
+    githubMesh.position.y = Math.sin(time * githubverticalFrequency) * githubverticalAmplitude;
+
+    gmailMesh.position.x = Math.cos(time * gmailTimeMultiplier) * gmailApogee;
+    gmailMesh.position.z = Math.sin(time * gmailTimeMultiplier) * gmailPerigee;
+    gmailMesh.position.y = Math.sin(time * gmailverticalFrequency) * gmailverticalAmplitude;
+
+    // Make the nodes to always face the camera
+    linkedinMesh.lookAt(camera.position);
+    githubMesh.lookAt(camera.position);
+    gmailMesh.lookAt(camera.position);
+
+
+    controls.update();
+    renderer.render(scene, camera);
+  }, [camera, controls, earthCloudsMesh.rotation, earthMesh.rotation, linkedinMesh, githubMesh.position, gmailMesh.position, renderer, scene]);
+
+
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -230,19 +262,9 @@ const ThreeScene: React.FC = () => {
 
       // Renames nodes and change inclination plan
       //TODO: Refacto to use dynamic names instead of instantiating 3 nodes
-      node1Mesh.castShadow = true;
-      node2Mesh.castShadow = true;
-      node3Mesh.castShadow = true;
-      node1Mesh.rotation.x = 90;
-      node1Mesh.rotation.y = 0.40;
-      node2Mesh.rotation.x = 90;
-      node2Mesh.rotation.y = 0.40;
-      node3Mesh.rotation.x = 90;
-      node3Mesh.rotation.y = 0.40;
-
-      // Planet Ring inclination
-      earthRingMesh.rotation.x = 90;
-      earthRingMesh.rotation.y = 0.40;
+      linkedinMesh.castShadow = true;
+      githubMesh.castShadow = true;
+      gmailMesh.castShadow = true;
 
       //Milky way inclination
       starBackgroundMesh.rotation.x = 60.2;
@@ -252,10 +274,9 @@ const ThreeScene: React.FC = () => {
       earthCloudsMesh.castShadow = true;
       earthMesh.receiveShadow = true;
       earthCloudsMesh.receiveShadow = true;
-      earthRingMesh.receiveShadow = true;
-      node1Mesh.receiveShadow = true;
-      node2Mesh.receiveShadow = true;
-      node3Mesh.receiveShadow = true;
+      linkedinMesh.receiveShadow = true;
+      githubMesh.receiveShadow = true;
+      gmailMesh.receiveShadow = true;
       dirLight.castShadow = true;
 
       // Add light
@@ -265,10 +286,9 @@ const ThreeScene: React.FC = () => {
       earthMesh.name = 'earth';
       earthCloudsMesh.name = 'earthClouds';
       earthAtmosphereMesh.name = 'earthAtmosphere';
-      earthRingMesh.name = 'earthRing';
-      node1Mesh.name = 'node1';
-      node2Mesh.name = 'node2';
-      node3Mesh.name = 'node3';
+      linkedinMesh.name = 'linkedinNode';
+      githubMesh.name = 'githubNode';
+      gmailMesh.name = 'gmailNode';
 
       //Add objects to scene
       scene.add(dirLight);
@@ -276,12 +296,10 @@ const ThreeScene: React.FC = () => {
       scene.add(earthMesh);
       scene.add(earthCloudsMesh);
       scene.add(earthAtmosphereMesh);
-      scene.add(earthRingMesh);
-      scene.add(node1Mesh);
-      scene.add(node2Mesh);
-      scene.add(node3Mesh);
+      scene.add(linkedinMesh);
+      scene.add(githubMesh);
+      scene.add(gmailMesh);
       scene.add(starBackgroundMesh);
-
       animate();
 
       let previousObject = '';
@@ -328,7 +346,7 @@ const ThreeScene: React.FC = () => {
         window.removeEventListener('resize', handleResize);
       };
     }
-  }, [renderer, scene, camera, controls, earthMesh, earthCloudsMesh, earthAtmosphereMesh, earthRingMesh, node1Mesh, node2Mesh, node3Mesh, starBackgroundMesh, dirLight, ambientLight, mouse, raycaster, textMesh, handleResize, animate, updateMeshHoverEmissiveColor]);
+  }, [renderer, scene, camera, controls, earthMesh, earthCloudsMesh, earthAtmosphereMesh, linkedinMesh, githubMesh, gmailMesh, starBackgroundMesh, dirLight, ambientLight, mouse, raycaster, textMesh, handleResize, animate, updateMeshHoverEmissiveColor]);
 
   return (
     <div ref={containerRef} />
